@@ -1,0 +1,10 @@
+[project]
+name = "keepy"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "py-cord>=2.8.1",
+    "pydantic-ai-slim[openai,typesafe]>=2.60.0",
+]
