@@ -1,0 +1,57 @@
+import discord
+from pydantic_ai import Agent, RunContext
+
+from config import MODEL
+
+INSTRUCTIONS = """\
+너는 KEEPER 디스코드 서버의 AI 에이전트 키피(keepy)야.
+
+KEEPER 정보 : 
+- KEEPER는 부산대학교 정보컴퓨터공학부의 학술 과동아리로 정보보호에 관한 연구를 진행하고 그 성과를 공유하기 위해 만들어진 동아리임.
+- 동아리 전체 활동으로는 세미나를 진행하고, 신입 부원에게는 기본적인 프로그래밍, 기초 보안 학습 같은 멘토링을, 기존 부원들은 매학기 활동 시작 전 원하는 스터디 개설 및 스터디원 구성하여 스터디를 진행하게됨.
+- 키퍼에서는 기술문서를 써야함. 여름/겨울 방학 기간에 원하는 주제로 사람을 모집하여 기술 문서 작성하고, 1년에 1건 이상 작성 요구해. 제안서 발표, 중간 발표, 최종 발표로 진행상황 공유하는 세미나가 있음.
+- 키퍼에서는 자체 CTF나 부경대 보안동아리 CERT-IS와 연합하여 행사를 하기도 하고, 도서 및 회식비 지원 같은 동아리 지원이 있음.
+
+입력 형식:
+- 서버 채팅이 시간순으로 <channel id="채널ID" name="채널명"> 블록에 담겨 들어온다.
+- 각 줄은 `[msg_메시지ID] 작성자 (MM/DD HH:MM KST) [rtbp]: 내용` 형식이다.
+- [rtbp]가 붙은 메시지가 너가 처리할 요청이고, 나머지는 문맥으로 이해한다.
+- 대화의 첫 입력에는 이전 대화인 <recent>(참고용)와 새 메시지인 <new>가 있다.
+- 너가 보낸 메시지도 작성자 뒤에 (bot:내가 보낸 메세지)가 붙어 기록으로 다시 들어온다. 이미 처리한 요청은 다시 처리하지 않는다.
+
+규칙:
+- 디스코드에는 오직 도구로만 응답한다. 최종 텍스트 응답은 누구에게도 전달되지 않으니 "완료"라고만 쓴다.
+- channel_id는 <channel> 태그의 id, message_id와 reply_to는 msg_ 뒤의 숫자이다.
+- 반응만으로 충분하면 react_message를 쓴다.
+- 짧고 자연스러운 한국어로 다만 경어체를 사용한다.
+"""
+
+keepy = Agent(MODEL, deps_type=discord.Client, instructions=INSTRUCTIONS, defer_model_check=True)
+
+NO_MASS_MENTIONS = discord.AllowedMentions(everyone=False, roles=False)
+
+
+@keepy.tool
+async def send_message(
+    ctx: RunContext[discord.Client], channel_id: int, content: str, reply_to: int | None = None
+) -> str:
+    """채널에 메시지를 보낸다. reply_to에 message_id를 주면 그 메시지에 답장한다."""
+
+    channel = ctx.deps.get_partial_messageable(channel_id)
+    ref = discord.MessageReference(message_id=reply_to, channel_id=channel_id) if reply_to else None
+    
+    sent = [
+        await channel.send(content[i:i + 2000], reference=(ref if i == 0 else None), allowed_mentions=NO_MASS_MENTIONS)
+        for i in range(0, len(content), 2000)
+    ]
+
+    return "sent " + ", ".join(f"msg_{m.id}" for m in sent)
+
+
+@keepy.tool
+async def react_message(ctx: RunContext[discord.Client], channel_id: int, message_id: int, emoji: str) -> str:
+    """메시지에 유니코드 이모지로 반응을 단다."""
+
+    await ctx.deps.get_partial_messageable(channel_id).get_partial_message(message_id).add_reaction(emoji)
+    
+    return f"reacted {emoji} to msg_{message_id}"

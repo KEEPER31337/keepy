@@ -6,5 +6,5 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "py-cord>=2.8.1",
-    "pydantic-ai-slim[openai,typesafe]>=2.60.0",
+    "pydantic-ai-slim[openrouter,typesafe]>=2.60.0",
 ]
