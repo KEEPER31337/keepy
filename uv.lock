@@ -3,7 +3,7 @@ revision = 3
 requires-python = ">=3.12"
 
 [options]
-exclude-newer = "2026-10-23T13:23:24.049989Z"
+exclude-newer = "2026-10-25T07:03:31.909035Z"
 exclude-newer-span = "P7D"
 
 [[package]]
@@ -469,12 +469,14 @@ name = "keepy"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "aiohttp" },
     { name = "py-cord" },
     { name = "pydantic-ai-slim", extra = ["openrouter", "typesafe"] },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "aiohttp", specifier = ">=3.14.5" },
     { name = "py-cord", specifier = ">=2.8.1" },
     { name = "pydantic-ai-slim", extras = ["openrouter", "typesafe"], specifier = ">=2.60.0" },
 ]

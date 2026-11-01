@@ -6,9 +6,9 @@ import discord
 from pydantic_ai import ModelMessage
 
 import db
+from agent import keepy
 from config import BATCH, MAX_TOKENS, RESET_AFTER, RUN_TIMEOUT
 
-from .agent import keepy
 from .serialize import serialize
 
 log = logging.getLogger(__name__)

@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta, timezone
 
 DISCORD_TOKEN = os.environ["DISCORD_TOKEN"]
 GUILD_ID = int(os.environ["GUILD_ID"])
@@ -12,3 +13,5 @@ MAX_TOKENS = 50_000
 RESET_AFTER = 12 * 60 * 60
 DECISION_TIMEOUT = 10
 RUN_TIMEOUT = 300
+
+KST = timezone(timedelta(hours=9))

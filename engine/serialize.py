@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from itertools import groupby
 
+from config import KST
 from db import Msg
-
-KST = timezone(timedelta(hours=9))
 
 
 def line(m: Msg, bot_id: int) -> str:
