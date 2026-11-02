@@ -12,8 +12,11 @@ async def send_message(
     channel = ctx.deps.get_partial_messageable(channel_id)
     ref = discord.MessageReference(message_id=reply_to, channel_id=channel_id) if reply_to else None
 
+    # 링크마다 미리보기 카드가 붙으면 뉴스 목록처럼 링크가 여럿인 답이 화면을 다 차지하므로 임베드는 끈다
     sent = [
-        await channel.send(content[i:i + 2000], reference=(ref if i == 0 else None), allowed_mentions=NO_MASS_MENTIONS)
+        await channel.send(
+            content[i:i + 2000], reference=(ref if i == 0 else None), allowed_mentions=NO_MASS_MENTIONS, suppress_embeds=True
+        )
         for i in range(0, len(content), 2000)
     ]
 
