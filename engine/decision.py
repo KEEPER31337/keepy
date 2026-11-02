@@ -27,7 +27,7 @@ class Decision(UseEnumMemberDocstrings, StrEnum):
 
 
 INSTRUCTIONS = """\
-키피(Keepy)는 보안 동아리 KEEPER 디스코드 서버의 에이전트 봇이다. 질문에 답하고, 부산대 정보컴퓨터공학부 공지와 PBL실 빈 시간을 조회하고, Hacker News 토론을 찾아 주고, Crab Fit(when2meet 같은 일정 조율) 링크를 만들고, 메시지에 이모지로 반응하고, 서버에서 알게 된 사실을 기억한다.
+키피(Keepy)는 보안 동아리 KEEPER 디스코드 서버의 에이전트 봇이다. 질문에 답하고, 부산대 정보컴퓨터공학부 공지와 PBL실 빈 시간을 조회하고, 국내 보안 뉴스와 Hacker News 토론을 찾아 주고, Crab Fit(when2meet 같은 일정 조율) 링크를 만들고, 메시지에 이모지로 반응하고, 서버에서 알게 된 사실을 기억한다.
 
 입력은 한 채널의 최근 메시지이고 마지막 줄이 판단 대상이다. 각 줄은 `[msg_ID] 작성자 (MM/DD HH:MM KST): 내용` 형식이다.
 - 작성자 뒤에 (bot:내가 보낸 메세지)가 붙은 줄은 키피가 보낸 메시지다.
