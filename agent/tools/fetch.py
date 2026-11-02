@@ -9,12 +9,23 @@ import aiohttp
 
 TIMEOUT = aiohttp.ClientTimeout(total=15)
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; keepy/0.1; Discord bot feed reader)"}
-FETCH_ERRORS = (aiohttp.ClientError, TimeoutError)
+
+
+class FetchError(Exception):
+    """HTTP 오류 응답. aiohttp의 ClientResponseError는 repr에 요청 헤더까지 실려 모델에 돌려주기엔 너무 길다"""
+
+    def __init__(self, status: int, url: str):
+        super().__init__(f"HTTP {status} {url}")
+        self.status = status
+
+
+FETCH_ERRORS = (aiohttp.ClientError, TimeoutError, FetchError)
 
 
 async def fetch(url: str, params: dict | None = None) -> bytes:
     async with aiohttp.ClientSession(timeout=TIMEOUT, headers=HEADERS) as session, session.get(url, params=params) as res:
-        res.raise_for_status()
+        if res.status >= 400:
+            raise FetchError(res.status, str(res.url))
         return await res.read()
 
 
