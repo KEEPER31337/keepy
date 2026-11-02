@@ -7,5 +7,6 @@ requires-python = ">=3.12"
 dependencies = [
     "aiohttp>=3.14.5",
     "py-cord>=2.8.1",
+    "pydantic-ai-harness>=0.61.0",
     "pydantic-ai-slim[openrouter,typesafe]>=2.60.0",
 ]
