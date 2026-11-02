@@ -24,7 +24,8 @@ def format_notice(item: ET.Element) -> str:
 async def get_cse_notices(limit: Annotated[int, Field(ge=1, le=50)] = 10) -> str:
     """부산대학교 정보컴퓨터공학부 공지사항을 최신순으로 가져온다.
 
-    본문은 앞부분만 있으니 자세한 내용은 링크를 안내한다.
+    본문은 앞부분만 있으니, 앞 부분 내용은 되도록 같이 그리고 추가로 자세한 내용은 링크를 안내한다.
+    링크는 []() 같은 마크다운을 사용해서 표현한다. 
 
     Args:
         limit: 가져올 공지 개수 (1~50)
