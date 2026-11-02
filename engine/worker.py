@@ -10,6 +10,7 @@ from agent import keepy
 from config import BATCH, MAX_TOKENS, RESET_AFTER, RUN_TIMEOUT
 
 from .serialize import serialize
+from .typing import TypingKeeper
 
 log = logging.getLogger(__name__)
 
@@ -43,18 +44,21 @@ class Worker:
         if not self.context:
             prompt = f"<recent>\n{serialize(db.recent(rows[0].id - 1, BATCH), bot_id)}\n</recent>\n\n<new>\n{prompt}\n</new>"
 
-        # '입력 중...' 표시는 디스코드가 10초 뒤 알아서 끄고, 메시지를 보내면 즉시 지운다. 재전송 루프를 두면 보낸 뒤에도 되살아나므로 한 번만 보낸다
+        # rtbp 채널마다 '입력 중...'을 계속 켜 두고, 그 채널에 답장을 보내는 순간 끈다 (답장 후 되살아나면 유령 타이핑이 된다)
+        # 같은 채널에 rtbp가 여럿이면 첫 답장 이후로는 표시가 없다. 하네스는 모델이 몇 번 답할지 모르므로 감수한다
+        typing = TypingKeeper(self.client)
         for cid in {m.channel_id for m in rows if m.decision == "rtbp"}:
-            try:
-                await self.client.get_partial_messageable(cid).trigger_typing()
-            except discord.HTTPException:
-                log.warning("typing failed in %s", cid, exc_info=True)
+            typing.start(cid)
 
         try:
-            result = await keepy.run(prompt, deps=self.client, message_history=self.context, timeout=RUN_TIMEOUT)
+            result = await keepy.run(
+                prompt, deps=self.client, message_history=self.context, timeout=RUN_TIMEOUT, capabilities=[typing.hooks()]
+            )
         except Exception:
             log.exception("worker run failed")
             return
+        finally:
+            await typing.stop_all()
        
         self.context, self.last_active = result.all_messages(), time.time()
        
