@@ -42,6 +42,14 @@ class Worker:
         
         if not self.context:
             prompt = f"<recent>\n{serialize(db.recent(rows[0].id - 1, BATCH), bot_id)}\n</recent>\n\n<new>\n{prompt}\n</new>"
+
+        # '입력 중...' 표시는 디스코드가 10초 뒤 알아서 끄고, 메시지를 보내면 즉시 지운다. 재전송 루프를 두면 보낸 뒤에도 되살아나므로 한 번만 보낸다
+        for cid in {m.channel_id for m in rows if m.decision == "rtbp"}:
+            try:
+                await self.client.get_partial_messageable(cid).trigger_typing()
+            except discord.HTTPException:
+                log.warning("typing failed in %s", cid, exc_info=True)
+
         try:
             result = await keepy.run(prompt, deps=self.client, message_history=self.context, timeout=RUN_TIMEOUT)
         except Exception:
