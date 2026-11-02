@@ -15,7 +15,7 @@ async def main():
     intents = discord.Intents.default()
     intents.message_content = True
 
-    client = discord.Client(intents=intents)
+    client = discord.Client(intents=intents, activity=discord.Game("키피야~ 라고 불러보세요"))
     worker = Worker(client)
 
     @client.event
