@@ -62,15 +62,20 @@ def newest_id() -> int:
 
 
 def batch(cursor: int, n: int) -> list[Msg]:
-    """cursor 이후 ~ DECISION=NULL 행 전까지, 그중 최근 n개 가져옴"""
+    """cursor 이후 ~ decision=NULL 행 전까지 중 최근 n개를 가져온다.
+
+    그보다 오래된 rtbp 행도 함께 가져온다. 한 실행이 길어지는 동안 n개 넘게 쌓여도 요청이 잘려 나가지 않는다
+    """
     rows = conn.execute(
-        """SELECT * FROM (
+        """WITH span AS (
                SELECT * FROM chat_history
                WHERE id > :cursor AND id < COALESCE(
                    (SELECT min(id) FROM chat_history WHERE id > :cursor AND decision IS NULL),
                    9223372036854775807)
-               ORDER BY id DESC LIMIT :n
-           ) ORDER BY id""",
+           )
+           SELECT * FROM span
+           WHERE decision = 'rtbp' OR id IN (SELECT id FROM span ORDER BY id DESC LIMIT :n)
+           ORDER BY id""",
         {"cursor": cursor, "n": n},
     )
     return [Msg(*r) for r in rows]
