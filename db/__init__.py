@@ -2,7 +2,6 @@ import sqlite3
 from typing import NamedTuple
 
 import discord
-from pydantic_ai_harness.memory import SqliteMemoryStore
 
 from config import DB_PATH
 
@@ -32,17 +31,13 @@ CREATE TABLE IF NOT EXISTS chat_history (
 """
 
 conn: sqlite3.Connection
-memory: SqliteMemoryStore
-# 에이전트 메모리(memory_* table)
-# 동일한 db 파일을 쓰지만 호출마다 워커 스레드에서 연결을 따로 열므로 conn과 섞이지 않음.
 
 
 def init(path: str = DB_PATH):
-    global conn, memory
+    global conn
     conn = sqlite3.connect(path, autocommit=True)
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute(SCHEMA)
-    memory = SqliteMemoryStore(database=path)
 
 
 def insert(m: discord.Message):
