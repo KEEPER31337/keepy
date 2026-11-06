@@ -1,0 +1,64 @@
+name: keepy deploy
+on:
+  workflow_dispatch:
+
+concurrency: deploy
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      IMAGE_TAG: ${{ github.sha }}
+      RETENTION_COUNT: '3' # 롤백용으로 남길 이미지 개수
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Build image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: ./infra/Dockerfile
+          tags: keepy:${{ env.IMAGE_TAG }}
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - uses: rezakargar/setup-unregistry@9166ef1e3d74eca84aecfb412393c17324eea59f # v1
+        with:
+          version: 75f5b35683980a7cb3811645ef7ee0cfe3d64c00 # psviderski/unregistry v0.4.3
+
+      - uses: webfactory/ssh-agent@dc588b651fe13675774614f8e6a936a468676387 # v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add remote host to known_hosts
+        run: ssh-keyscan -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Send image to server
+        run: docker pussh "keepy:${IMAGE_TAG}" "${DEPLOY_USER}@${DEPLOY_HOST}"
+
+      - name: Renew keepy container and prune old images
+        run: |
+          ssh "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "IMAGE_TAG=${IMAGE_TAG} RETENTION_COUNT=${RETENTION_COUNT} bash -s" << 'EOF'
+            set -euo pipefail
+
+            cd /opt/keeper-infra/containers
+
+            echo "KEEPY_TAG=${IMAGE_TAG}" > .keepy-ver.env
+            sudo docker compose --env-file .env --env-file .keepy-ver.env up -d --no-deps --force-recreate keepy
+
+            # docker image ls는 최신순이다. 현재 태그와 그다음 최신 이미지들만 남기고 지움
+            sudo docker image ls keepy --format '{{.Tag}}' \
+              | awk -v cur="${IMAGE_TAG}" -v keep="$((RETENTION_COUNT - 1))" '$0 != cur && ++n > keep' \
+              | xargs -r -I{} sudo docker image rm "keepy:{}"
+          EOF

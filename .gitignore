@@ -4,3 +4,4 @@
 .venv/
 __pycache__/
 keepy.db
+.mypy_cache
