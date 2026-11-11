@@ -7,7 +7,7 @@ import db
 from .decision import Decision, decide
 from .worker import Worker
 
-KEYWORD = re.compile(r"키피|keepy", re.IGNORECASE)
+KEYWORD = re.compile(r"키피야|keepy", re.IGNORECASE)
 
 
 async def on_message(msg: discord.Message, *, client: discord.Client, worker: Worker, guild_id: int):
