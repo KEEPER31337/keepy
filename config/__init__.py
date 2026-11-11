@@ -6,9 +6,10 @@ GUILD_ID = int(os.environ["GUILD_ID"])
 OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
 # 웹 검색 도구 전용이라 없어도 봇은 뜨고, 그 도구들만 실패를 돌려준다
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
-MODEL = os.environ.get("KEEPY_MODEL", "openrouter:deepseek/deepseek-v4.1-flash-1017")
-# OpenRouter 기본 라우팅은 가장 싼 양자화 호스트로 보내므로 DeepSeek 공식 엔드포인트를 먼저 쓰고, 장애 시 이 목록의 호스트로만 넘긴다
-MODEL_PROVIDERS = os.environ.get("KEEPY_MODEL_PROVIDERS", "deepseek,deepinfra,together").split(",")
+MODEL = os.environ.get("KEEPY_MODEL", "openrouter:z-ai/glm-5.3-flash")
+# OpenRouter 기본 라우팅은 가장 싼 양자화 호스트로 보내므로 공식 FP8 가중치를 쓰는 엔드포인트만 이 순서로 쓴다
+# Z.AI 공식은 생성 속도가 느려 뺐다. provider만 적으면 나중에 생긴 fp4 엔드포인트까지 매칭되므로 /fp8까지 적는다
+MODEL_PROVIDERS = os.environ.get("KEEPY_MODEL_PROVIDERS", "inceptron/fp8,baseten/fp8,novita/fp8").split(",")
 DECISION_MODEL = os.environ.get("KEEPY_DECISION_MODEL", "jev-latest")
 DB_PATH = os.environ.get("KEEPY_DB", "keepy.db")
 
