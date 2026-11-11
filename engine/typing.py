@@ -10,7 +10,7 @@ from config import TYPING_INTERVAL, TYPING_TIMEOUT
 
 log = logging.getLogger(__name__)
 
-# 디스코드에는 타이핑을 끄는 API가 없다. 한 번 켜면 10초가 지나거나 봇이 그 채널에 메시지를 보내야 꺼진다
+# 디스코드에는 타이핑을 끄는 API가 없으므로, 한 번 켜면 10초가 지나거나 봇이 그 채널에 메시지를 보내야 꺼진다
 REPLY_TOOLS = {"send_message", "react_message"}
 
 

@@ -11,8 +11,7 @@ KEYWORD = re.compile(r"키피야|keepy", re.IGNORECASE)
 
 
 async def on_message(msg: discord.Message, *, client: discord.Client, worker: Worker, guild_id: int):
-    # DM이 아닌 디스코드 서버의 채팅인지, 그리고 우리가 설정한 서버에서 온 채팅인지 확인
-    if not msg.guild or msg.guild.id != guild_id: 
+    if not msg.guild or msg.guild.id != guild_id: # DM 혹은 설정한 서버가 아닐 시 모두 무시 
         return
 
     db.insert(msg)
@@ -26,4 +25,4 @@ async def on_message(msg: discord.Message, *, client: discord.Client, worker: Wo
 
     db.set_decision(msg.id, decision)
 
-    worker.wake.set()
+    worker.notify()

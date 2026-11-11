@@ -51,9 +51,11 @@ conn: sqlite3.Connection
 
 def init(path: str = DB_PATH):
     global conn
+
     conn = sqlite3.connect(path, autocommit=True)
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute(SCHEMA)
+    
     if not conn.execute("SELECT 1 FROM sqlite_master WHERE name = 'chat_fts'").fetchone():
         conn.executescript(FTS_SCHEMA)
 
