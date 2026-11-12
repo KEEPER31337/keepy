@@ -21,10 +21,10 @@ class ReminderWorker:
         await self.client.wait_until_ready()
 
         while True:
-            await self.tick()
+            await self.process()
             await asyncio.sleep(REMINDER_INTERVAL)
 
-    async def tick(self):
+    async def process(self):
         now = datetime.now(timezone.utc)
 
         for r in db.due_reminders(now.isoformat(), (now - timedelta(seconds=REMINDER_CUTOFF)).isoformat()):
