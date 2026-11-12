@@ -20,5 +20,8 @@ RUN_TIMEOUT = 300
 # 디스코드는 '입력 중...'을 10초 뒤 끄므로 그보다 짧게 다시 켠다. 실행이 멈춰도 타이핑이 RUN_TIMEOUT 내내 보이지 않도록 따로 둔다
 TYPING_INTERVAL = 8
 TYPING_TIMEOUT = 120
+REMINDER_INTERVAL = 60
+# 예정 시각에서 이만큼 지난 리마인더는 보내지 않는다. 긴 장애 뒤에 지난 알림이 한꺼번에 쏟아지지 않게 한다
+REMINDER_CUTOFF = 3 * 24 * 60 * 60
 
 KST = timezone(timedelta(hours=9))

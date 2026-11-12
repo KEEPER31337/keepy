@@ -9,6 +9,7 @@ from .cse_pbl import search_pbl_rooms
 from .dorm import get_dorm_menu
 from .hacker_news import get_hacker_news, read_hacker_news
 from .message import react_message, send_message
+from .reminder import cancel_reminder, create_reminder, list_reminders
 from .security_news import get_security_news
 from .web import read_web_page, search_web
 
@@ -16,5 +17,6 @@ TOOLS = [
     # 도구 호출은 기본으로 병렬 실행된다. 같은 채널에 긴 답장이 둘이면 2000자 조각이 서로 섞이므로 전송만은 한 번에 하나씩 한다
     Tool(send_message, sequential=True), react_message, create_crabfit_event, get_cse_notices, search_pbl_rooms,
     get_security_news, get_hacker_news, read_hacker_news, search_chat_history, get_cafeteria_menu,
-    get_dorm_menu, get_academic_calendar, search_web, read_web_page,
+    get_dorm_menu, get_academic_calendar, search_web, read_web_page, create_reminder, cancel_reminder,
+    list_reminders,
 ]

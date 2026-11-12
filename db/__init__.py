@@ -18,6 +18,16 @@ class Msg(NamedTuple):
     decision: str | None
 
 
+class Reminder(NamedTuple):
+    id: int
+    channel_id: int
+    creator_user_id: int
+    content: str
+    remind_at: str
+    created_at: str
+    done: int
+
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS chat_history (
     id INTEGER PRIMARY KEY,
@@ -28,6 +38,20 @@ CREATE TABLE IF NOT EXISTS chat_history (
     content TEXT NOT NULL,
     created_at TEXT NOT NULL,
     decision TEXT CHECK (decision IN ('save-only', 'rtbp'))
+)
+"""
+
+# AUTOINCREMENT는 취소로 지운 id를 다시 쓰지 않는다. 모델이 컨텍스트에 남은 예전 id로 다른 리마인더를 취소하지 않게 한다
+# remind_at은 chat_history.created_at과 같은 UTC isoformat이라 문자열 비교가 곧 시간 비교다
+REMINDER_SCHEMA = """
+CREATE TABLE IF NOT EXISTS reminder (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    channel_id INTEGER NOT NULL,
+    creator_user_id INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    remind_at TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    done INTEGER NOT NULL DEFAULT 0 CHECK (done IN (0, 1))
 )
 """
 
@@ -55,6 +79,7 @@ def init(path: str = DB_PATH):
     conn = sqlite3.connect(path, autocommit=True)
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute(SCHEMA)
+    conn.execute(REMINDER_SCHEMA)
     
     if not conn.execute("SELECT 1 FROM sqlite_master WHERE name = 'chat_fts'").fetchone():
         conn.executescript(FTS_SCHEMA)
@@ -70,6 +95,12 @@ def insert(m: discord.Message):
 
 def set_decision(id: int, decision: str):
     conn.execute("UPDATE chat_history SET decision = ? WHERE id = ?", (decision, id))
+
+
+def get_msg(id: int) -> Msg | None:
+    row = conn.execute("SELECT * FROM chat_history WHERE id = ?", (id,)).fetchone()
+
+    return Msg(*row) if row else None
 
 
 def newest_id() -> int:
@@ -132,3 +163,46 @@ def search(
         {"fts": fts, "short": short, "channel": channel, "author": author, "after": after, "before": before, "n": n},
     )
     return [Msg(*r) for r in rows]
+
+
+def insert_reminder(channel_id: int, creator_user_id: int, content: str, remind_at: str, created_at: str) -> int:
+    return conn.execute(
+        "INSERT INTO reminder (channel_id, creator_user_id, content, remind_at, created_at) VALUES (?, ?, ?, ?, ?)",
+        (channel_id, creator_user_id, content, remind_at, created_at),
+    ).lastrowid
+
+
+def get_reminder(id: int) -> Reminder | None:
+    row = conn.execute("SELECT * FROM reminder WHERE id = ?", (id,)).fetchone()
+
+    return Reminder(*row) if row else None
+
+
+def delete_reminder(id: int):
+    conn.execute("DELETE FROM reminder WHERE id = ?", (id,))
+
+
+def pending_reminders(
+    cutoff: str, channel_id: int | None = None, creator_user_id: int | None = None
+) -> list[Reminder]:
+    rows = conn.execute(
+        """SELECT * FROM reminder
+           WHERE done = 0 AND remind_at > :cutoff
+             AND (:ch IS NULL OR channel_id = :ch)
+             AND (:creator IS NULL OR creator_user_id = :creator)
+           ORDER BY remind_at""",
+        {"cutoff": cutoff, "ch": channel_id, "creator": creator_user_id},
+    )
+    return [Reminder(*r) for r in rows]
+
+
+def due_reminders(now: str, cutoff: str) -> list[Reminder]:
+    rows = conn.execute(
+        "SELECT * FROM reminder WHERE done = 0 AND remind_at <= :now AND remind_at > :cutoff ORDER BY remind_at",
+        {"now": now, "cutoff": cutoff},
+    )
+    return [Reminder(*r) for r in rows]
+
+
+def mark_done(id: int):
+    conn.execute("UPDATE reminder SET done = 1 WHERE id = ?", (id,))

@@ -10,7 +10,7 @@ def line(m: Msg, bot_id: int) -> str:
     tag = " [rtbp]" if m.decision == "rtbp" else ""
     me = " (bot:내가 보낸 메세지)" if m.author_id == bot_id else ""
     
-    return f"[msg_{m.id}] {m.author_name}{me} ({at:%m/%d %H:%M} KST){tag}: {m.content}"
+    return f"[msg_{m.id}] {m.author_name} (user_{m.author_id}){me} ({at:%m/%d %H:%M} KST){tag}: {m.content}"
 
 
 def serialize(rows: list[Msg], bot_id: int) -> str:
