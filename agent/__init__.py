@@ -40,7 +40,10 @@ keepy = Agent(
     deps_type=discord.Client,
     instructions=INSTRUCTIONS,
     tools=TOOLS,
-    model_settings=OpenRouterModelSettings(openrouter_provider={"order": MODEL_PROVIDERS, "allow_fallbacks": False}),
+    model_settings=OpenRouterModelSettings(
+        openrouter_provider={"order": MODEL_PROVIDERS, "allow_fallbacks": False},
+        openrouter_reasoning={"effort": "high"},
+    ),
     defer_model_check=True,
 )
 

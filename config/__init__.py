@@ -8,7 +8,7 @@ OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 MODEL = os.environ.get("KEEPY_MODEL", "openrouter:deepseek/deepseek-v4.1-flash-1017")
 # OpenRouter 기본 라우팅은 가장 싼 양자화 호스트로 보내므로 DeepSeek 공식 엔드포인트를 먼저 쓰고, 장애 시 이 목록의 호스트로만 넘긴다
-MODEL_PROVIDERS = os.environ.get("KEEPY_MODEL_PROVIDERS", "deepseek,deepinfra,together").split(",")
+MODEL_PROVIDERS = os.environ.get("KEEPY_MODEL_PROVIDERS", "deepseek,baseten,deepinfra,together").split(",")
 DECISION_MODEL = os.environ.get("KEEPY_DECISION_MODEL", "jev-latest")
 DB_PATH = os.environ.get("KEEPY_DB", "keepy.db")
 
