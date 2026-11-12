@@ -25,7 +25,7 @@ async def create_reminder(
 
     그 시각에는 키피가 다시 생각하지 않고 content를 채널에 그대로 전송하므로, content는 그 자체로 뜻이 통하는 완성된 문구로 쓴다.
     전송할 때는 추가적인 멘션을 하지 않는다. 따라서 알림을 받아야 할 사람이 있으면 content에 <@유저ID>를 직접 넣는다.
-    예약한 뒤에는 돌려받은 예약 시각을 요청자에게 답해 준다.
+    예약한 뒤에는 돌려받은 리마인더 시각을 요청자에게 답해 준다.
 
     Args:
         message_id: 리마인더를 요청한 메시지
@@ -47,25 +47,20 @@ async def create_reminder(
     return f"created reminder_{reminder_id} at {kst(at)}"
 
 
-async def cancel_reminder(ctx: RunContext[discord.Client], message_id: int, reminder_id: int) -> str:
+async def cancel_reminder(ctx: RunContext[discord.Client], reminder_id: int) -> str:
     """예약한 리마인더를 취소한다. 리마인더를 만든 사람 본인이 요청할 때만 취소하고, 다른 사람의 요청은 거절한다.
 
-    reminder_id를 모르면 list_reminders로 찾는다.
+    이 도구는 요청자를 확인하지 않으므로, 요청자의 유저 id가 리마인더를 만든 유저와 같은지 직접 확인한 뒤에 호출한다.
+    reminder_id나 만든 사람을 모르면 list_reminders로 찾는다.
 
     Args:
-        message_id: 취소를 요청한 메시지
         reminder_id: 취소할 리마인더 (reminder_ 뒤의 숫자)
     """
-
-    if not (m := db.get_msg(message_id)):
-        return f"failed: msg_{message_id}를 찾을 수 없음"
 
     r = db.get_reminder(reminder_id)
 
     if not r or r.done:
         return f"failed: reminder_{reminder_id}는 없거나 이미 전송됨"
-    if m.author_id != r.creator_user_id:
-        return f"refused: reminder_{reminder_id}는 user_{r.creator_user_id}가 만들었으므로 본인만 취소할 수 있음"
 
     db.delete_reminder(reminder_id)
 

@@ -6,3 +6,4 @@ __pycache__/
 keepy.db
 .mypy_cache
 .DS_Store
+.ruff_cache
