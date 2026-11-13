@@ -45,7 +45,7 @@ class Worker:
         bot_id = self.client.user.id
         prompt = serialize(rows, bot_id)
         
-        if self.context:
+        if not self.context:
             prompt = f"<recent>\n{serialize(db.recent(rows[0].id - 1, BATCH), bot_id)}\n</recent>\n\n<new>\n{prompt}\n</new>"
 
         # rtbp 채널마다 '입력 중...'을 계속 켜 두고, 그 채널에 답장을 보내는 순간 끈다 (답장 후 되살아나면 유령 타이핑이 된다)
