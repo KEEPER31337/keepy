@@ -7,7 +7,7 @@ import db
 from .decision import Decision, decide
 from .worker import Worker
 
-KEYWORD = re.compile(r"키피야|keepy", re.IGNORECASE)
+KEYWORD = re.compile(r"키피|keepy", re.IGNORECASE)
 
 
 def replies_to(msg: discord.Message, user: discord.ClientUser) -> bool:
