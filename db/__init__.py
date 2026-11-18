@@ -69,6 +69,7 @@ INSERT INTO chat_fts (chat_fts) VALUES ('rebuild');
 COMMIT;
 """
 TRIGRAM = 3
+IMAGE_TAG = "[이미지 첨부]"
 
 conn: sqlite3.Connection
 
@@ -85,11 +86,21 @@ def init(path: str = DB_PATH):
         conn.executescript(FTS_SCHEMA)
 
 
+def content(m: discord.Message) -> str:
+    files = [a for a in m.attachments if not (a.content_type or "").startswith("image/")]
+    tags = [IMAGE_TAG] if len(files) < len(m.attachments) else []
+
+    if files:
+        tags.append(f"[파일 첨부: {', '.join(a.filename for a in files)}]")
+
+    return " ".join(filter(None, [m.clean_content, *tags]))
+
+
 def insert(m: discord.Message):
     conn.execute(
         "INSERT INTO chat_history VALUES (?, ?, ?, ?, ?, ?, ?, NULL)",
         (m.id, m.channel.id, getattr(m.channel, "name", "?"), m.author.id, m.author.display_name,
-         m.clean_content, m.created_at.isoformat()),
+         content(m), m.created_at.isoformat()),
     )
 
 
