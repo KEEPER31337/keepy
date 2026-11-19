@@ -69,7 +69,6 @@ INSERT INTO chat_fts (chat_fts) VALUES ('rebuild');
 COMMIT;
 """
 TRIGRAM = 3
-IMAGE_TAG = "[이미지 첨부]"
 
 conn: sqlite3.Connection
 
@@ -88,7 +87,7 @@ def init(path: str = DB_PATH):
 
 def content(m: discord.Message) -> str:
     files = [a for a in m.attachments if not (a.content_type or "").startswith("image/")]
-    tags = [IMAGE_TAG] if len(files) < len(m.attachments) else []
+    tags = ["[이미지 첨부]"] if len(files) < len(m.attachments) else []
 
     if files:
         tags.append(f"[파일 첨부: {', '.join(a.filename for a in files)}]")
