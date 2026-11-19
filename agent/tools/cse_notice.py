@@ -3,14 +3,15 @@ import xml.etree.ElementTree as ET
 from html import unescape
 from typing import Annotated
 
-import aiohttp
 from pydantic import Field
+
+from .http import HTTP_ERRORS, fetch
 
 log = logging.getLogger(__name__)
 
 SITE_URL = "https://cse.pusan.ac.kr"
 RSS_URL = f"{SITE_URL}/bbs/cse/2055/rssList.do"
-TIMEOUT = aiohttp.ClientTimeout(total=10)
+ERRORS = HTTP_ERRORS + (ET.ParseError,)
 
 
 def format_notice(item: ET.Element) -> str:
@@ -32,11 +33,8 @@ async def get_cse_notices(limit: Annotated[int, Field(ge=1, le=50)] = 10) -> str
     """
 
     try:
-        async with aiohttp.ClientSession(timeout=TIMEOUT) as session:
-            async with session.get(RSS_URL, params={"row": limit}) as res:
-                res.raise_for_status()
-                root = ET.fromstring(await res.read())
-    except (aiohttp.ClientError, TimeoutError, ET.ParseError) as e:
+        root = ET.fromstring(await fetch(RSS_URL, {"row": limit}))
+    except ERRORS as e:
         log.warning("cse notices fetch failed", exc_info=True)
         return f"failed: {e!r}"
 

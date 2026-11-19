@@ -9,7 +9,7 @@ from typing import Literal, NamedTuple
 
 import aiohttp
 
-from .fetch import FETCH_ERRORS, HEADERS, TIMEOUT, FetchError, cached, squash
+from .http import HEADERS, HTTP_ERRORS, TIMEOUT, cached, request, squash
 
 log = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ MENU_CD = "000000000000561"
 PAGE_URL = f"{SITE_URL}/pdorm/page"
 API_URL = f"{SITE_URL}/dorm/commonDorm/lifeGuide/mealPlan/selectMealPlanList"
 CACHE_TTL = 30 * 60
-ERRORS = FETCH_ERRORS + (ValueError, KeyError, TypeError)
+ERRORS = HTTP_ERRORS + (ValueError, KeyError, TypeError)
 
 Dorm = Literal["진리관", "웅비관", "자유관"]
 # 식당 코드(CAFE_GCD)와 식단표 페이지의 탭 번호
@@ -70,13 +70,6 @@ def parse_plan(rows: list[dict]) -> dict[date, list[Meal]]:
             meals.append(Meal(row["MEAL_KIND_GCD"], row["CODE_NM"], split_menu(row["MEAL_MENU_NM"])))
 
     return {day: sorted(meals) for day, meals in plan.items()}
-
-
-async def request(session: aiohttp.ClientSession, method: str, url: str, **kwargs) -> bytes:
-    async with session.request(method, url, **kwargs) as res:
-        if res.status >= 400:
-            raise FetchError(res.status, str(res.url))
-        return await res.read()
 
 
 @cached(CACHE_TTL)

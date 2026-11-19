@@ -9,7 +9,7 @@ from pydantic import Field
 
 from config import DEEPSEEK_API_KEY, KST
 
-from .fetch import FETCH_ERRORS, HEADERS, FetchError, cached, clip, squash
+from .http import HEADERS, HTTP_ERRORS, StatusError, cached, clip, request, squash
 
 log = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ SUMMARY_CHARS = 500
 # 요약에 `# 제목`, `#### 소제목` 같은 마크다운 제목 표시가 섞여 온다. `C#`처럼 붙어 있는 #는 건드리지 않는다
 HEADING = re.compile(r"(^|\s)#{1,6}\s+")
 PAGE_CHARS = 6_000
-ERRORS = FETCH_ERRORS + (ValueError, KeyError, TypeError)
+ERRORS = HTTP_ERRORS + (ValueError, KeyError, TypeError)
 STATUS = {
     401: "API 키가 잘못됨",
     402: "API 잔액 부족",
@@ -44,15 +44,13 @@ async def call(path: str, body: dict) -> dict:
         raise ValueError("DEEPSEEK_API_KEY가 설정되지 않음")
 
     headers = {**HEADERS, "Authorization": f"Bearer {DEEPSEEK_API_KEY}"}
-    async with aiohttp.ClientSession(timeout=TIMEOUT, headers=headers) as session, session.post(f"{API_URL}/{path}", json=body) as res:
-        # raise_for_status()와 res.json()이 올리는 오류는 repr에 Authorization 헤더가 실려 키가 모델과 채팅으로 샐 수 있다
-        if res.status >= 400:
-            raise FetchError(res.status, str(res.url))
-        return json.loads(await res.read())
+    # raise_for_status()와 res.json()이 올리는 오류는 repr에 Authorization 헤더가 실려 키가 모델과 채팅으로 샐 수 있다
+    async with aiohttp.ClientSession(timeout=TIMEOUT, headers=headers) as session:
+        return json.loads(await request(session, "POST", f"{API_URL}/{path}", json=body))
 
 
 def describe(e: Exception) -> str:
-    if isinstance(e, FetchError):
+    if isinstance(e, StatusError):
         return STATUS.get(e.status, str(e))
     # 위와 같은 이유로 응답 오류는 이름만 쓴다
     if isinstance(e, aiohttp.ClientResponseError):

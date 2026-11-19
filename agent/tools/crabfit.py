@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import date, datetime, time, timezone
 from typing import Annotated
@@ -8,12 +9,14 @@ from pydantic_ai import ModelRetry
 
 from config import KST
 
+from .http import HEADERS, HTTP_ERRORS, TIMEOUT, request
+
 log = logging.getLogger(__name__)
 
 API_URL = "https://api.crab.fit"
 SITE_URL = "https://crab.fit"
 TIMEZONE = "Asia/Seoul"
-TIMEOUT = aiohttp.ClientTimeout(total=10)
+ERRORS = HTTP_ERRORS + (ValueError,)
 
 
 def serialize_times(dates: list[date], start_hour: int, end_hour: int) -> list[str]:
@@ -49,11 +52,9 @@ async def create_crabfit_event(
     payload = {"name": name, "times": serialize_times(dates, start_hour, end_hour), "timezone": TIMEZONE}
 
     try:
-        async with aiohttp.ClientSession(timeout=TIMEOUT) as session:
-            async with session.post(f"{API_URL}/event", json=payload) as res:
-                res.raise_for_status()
-                event = await res.json()
-    except (aiohttp.ClientError, TimeoutError) as e:
+        async with aiohttp.ClientSession(timeout=TIMEOUT, headers=HEADERS) as session:
+            event = json.loads(await request(session, "POST", f"{API_URL}/event", json=payload))
+    except ERRORS as e:
         # 예외를 올리면 런 전체가 실패해 요청이 조용히 사라지므로 모델이 실패를 알릴 수 있게 돌려준다
         log.warning("crabfit event creation failed", exc_info=True)
         return f"failed: {e!r}"

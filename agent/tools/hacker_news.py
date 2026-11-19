@@ -8,7 +8,7 @@ from pydantic import Field
 
 from config import KST
 
-from .fetch import FETCH_ERRORS, FetchError, cached, clip, fetch, squash, to_text
+from .http import HTTP_ERRORS, StatusError, cached, clip, fetch, squash, to_text
 
 log = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ COMMENT_CHARS = 400
 REPLY_CHARS = 250
 MAX_COMMENTS = 10
 MAX_REPLIES = 2
-ERRORS = FETCH_ERRORS + (ValueError, KeyError, TypeError)
+ERRORS = HTTP_ERRORS + (ValueError, KeyError, TypeError)
 
 
 class Story(NamedTuple):
@@ -146,7 +146,7 @@ async def read_hacker_news(story_id: int) -> str:
     try:
         item = await thread(story_id)
     except ERRORS as e:
-        if isinstance(e, FetchError) and e.status == 404:
+        if isinstance(e, StatusError) and e.status == 404:
             return "failed: 그 id의 글이 없다. 댓글 id이거나 삭제된 글일 수 있다"
         log.warning("hacker news thread fetch failed", exc_info=True)
         return f"failed: {e!r}"

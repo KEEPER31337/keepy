@@ -4,17 +4,17 @@ import logging
 import re
 from datetime import date, time, timedelta
 
-import aiohttp
 from pydantic_ai import ModelRetry
 
 from .cse_notice import SITE_URL
+from .http import HTTP_ERRORS, fetch
 
 log = logging.getLogger(__name__)
 
 ROOMS = {"PBL실1(301-1호)": 49, "PBL실2(301-2호)": 48, "PBL실3(301-3호)": 50}
 RESERVE_URL = f"{SITE_URL}/cse/14243/subview.do"
 MAX_DAYS = 31
-TIMEOUT = aiohttp.ClientTimeout(total=10)
+ERRORS = HTTP_ERRORS + (ValueError,)
 
 CELL = re.compile(r"<td[^>]*>(.*?)</td>", re.S)
 DAY = re.compile(r"(\d{2})\s*<ul")
@@ -53,16 +53,12 @@ def free_slots(busy: list[tuple[int, int]], start: int, end: int) -> list[tuple[
     return slots
 
 
-async def fetch_room(
-    session: aiohttp.ClientSession, room_id: int, months: list[tuple[int, int]]
-) -> dict[date, list[tuple[int, int]]]:
+async def fetch_room(room_id: int, months: list[tuple[int, int]]) -> dict[date, list[tuple[int, int]]]:
     busy = {}
 
     for year, month in months:
-        url = f"{SITE_URL}/rsvt/cse/19/{room_id}/view.do"
-        async with session.get(url, params={"year": year, "month": month}) as res:
-            res.raise_for_status()
-            busy |= parse_month(await res.text(), year, month)
+        html = await fetch(f"{SITE_URL}/rsvt/cse/19/{room_id}/view.do", {"year": year, "month": month})
+        busy |= parse_month(html.decode("utf-8"), year, month)
 
     return busy
 
@@ -93,9 +89,8 @@ async def search_pbl_rooms(start_date: date, end_date: date, start_time: time, e
     months = sorted({(d.year, d.month) for d in days})
 
     try:
-        async with aiohttp.ClientSession(timeout=TIMEOUT) as session:
-            rooms = await asyncio.gather(*(fetch_room(session, room_id, months) for room_id in ROOMS.values()))
-    except (aiohttp.ClientError, TimeoutError, ValueError) as e:
+        rooms = await asyncio.gather(*(fetch_room(room_id, months) for room_id in ROOMS.values()))
+    except ERRORS as e:
         log.warning("pbl calendar fetch failed", exc_info=True)
         return f"failed: {e!r}"
 

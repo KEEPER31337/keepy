@@ -4,14 +4,14 @@ from datetime import date
 from typing import NamedTuple
 from urllib.parse import urlencode
 
-from .fetch import FETCH_ERRORS, cached, fetch, squash, to_text
+from .http import HTTP_ERRORS, cached, fetch, squash, to_text
 
 log = logging.getLogger(__name__)
 
 PAGE_URL = "https://www.pusan.ac.kr/kor/CMS/MenuMgr/menuListOnWeekly.do"
 CAMPUS = "PUSAN"
 CACHE_TTL = 30 * 60
-ERRORS = FETCH_ERRORS + (ValueError,)
+ERRORS = HTTP_ERRORS + (ValueError,)
 
 COMMENT = re.compile(r"<!--.*?-->", re.S)
 TABLE = re.compile(r'<table class="menu-tbl.*?</table>', re.S)

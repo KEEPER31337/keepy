@@ -9,7 +9,7 @@ from pydantic import Field
 
 from config import KST
 
-from .fetch import FETCH_ERRORS, cached, fetch, squash, to_text
+from .http import HTTP_ERRORS, cached, fetch, squash, to_text
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ FEEDS = {
     "dailysecu": ("데일리시큐", "https://www.dailysecu.com/rss/clickTop.xml"),
 }
 CACHE_TTL = 30 * 60
-ERRORS = FETCH_ERRORS + (ET.ParseError,)
+ERRORS = HTTP_ERRORS + (ET.ParseError,)
 
 
 class Article(NamedTuple):

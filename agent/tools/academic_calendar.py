@@ -3,13 +3,13 @@ import re
 from datetime import date, datetime
 from typing import NamedTuple
 
-from .fetch import FETCH_ERRORS, cached, fetch, squash, to_text
+from .http import HTTP_ERRORS, cached, fetch, squash, to_text
 
 log = logging.getLogger(__name__)
 
 PAGE_URL = "https://www.pusan.ac.kr/kor/CMS/Haksailjung/view.do?mCode=MN076"
 CACHE_TTL = 30 * 60
-ERRORS = FETCH_ERRORS + (ValueError,)
+ERRORS = HTTP_ERRORS + (ValueError,)
 
 TBODY = re.compile(r'<table class="[^"]*acacal-tbl.*?<tbody>(.*?)</tbody>', re.S)
 ROW = re.compile(r"<tr[^>]*>(.*?)</tr>", re.S)

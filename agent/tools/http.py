@@ -1,4 +1,4 @@
-"""외부 사이트를 읽는 도구들이 같이 쓰는 것: HTTP 요청, 시간 제한 캐시, HTML을 평문으로 바꾸기"""
+"""외부 사이트와 API를 쓰는 도구들이 같이 쓰는 것: HTTP 요청, 시간 제한 캐시, HTML을 평문으로 바꾸기"""
 
 import re
 import time
@@ -11,7 +11,7 @@ TIMEOUT = aiohttp.ClientTimeout(total=15)
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; keepy/0.1; Discord bot feed reader)"}
 
 
-class FetchError(Exception):
+class StatusError(Exception):
     """HTTP 오류 응답. aiohttp의 ClientResponseError는 repr에 요청 헤더까지 실려 모델에 돌려주기엔 너무 길다"""
 
     def __init__(self, status: int, url: str):
@@ -19,14 +19,21 @@ class FetchError(Exception):
         self.status = status
 
 
-FETCH_ERRORS = (aiohttp.ClientError, TimeoutError, FetchError)
+HTTP_ERRORS = (aiohttp.ClientError, TimeoutError, StatusError)
+
+
+async def request(session: aiohttp.ClientSession, method: str, url: str, **kwargs) -> bytes:
+    """쿠키나 인증 헤더, POST가 필요한 도구는 세션을 직접 열고 응답만 여기서 받는다. 그래야 오류 응답이 어디서나 StatusError다"""
+
+    async with session.request(method, url, **kwargs) as res:
+        if res.status >= 400:
+            raise StatusError(res.status, str(res.url))
+        return await res.read()
 
 
 async def fetch(url: str, params: dict | None = None) -> bytes:
-    async with aiohttp.ClientSession(timeout=TIMEOUT, headers=HEADERS) as session, session.get(url, params=params) as res:
-        if res.status >= 400:
-            raise FetchError(res.status, str(res.url))
-        return await res.read()
+    async with aiohttp.ClientSession(timeout=TIMEOUT, headers=HEADERS) as session:
+        return await request(session, "GET", url, params=params)
 
 
 def cached(ttl: float):
