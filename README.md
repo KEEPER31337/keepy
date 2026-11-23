@@ -1,4 +1,4 @@
-a# keepy
+# keepy
 ![키피 디스코드 이미지](docs/keepy-discord.png)
 
 KEEPER 디스코드 서버를 위한 에이전트로 자연스럽게 동아리 회원들 대화에 참여하고, 필요 시 도움을 줍니다.
