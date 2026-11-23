@@ -6,9 +6,9 @@ GUILD_ID = int(os.environ["GUILD_ID"])
 OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
 # 웹 검색 도구 전용이라 없어도 봇은 뜨고, 그 도구들만 실패를 돌려준다
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
-MODEL = os.environ.get("KEEPY_MODEL", "openrouter:tencent/hy4-flash")
+MODEL = os.environ.get("KEEPY_MODEL", "openrouter:thinkingmachines/inkling-2-mini")
 # OpenRouter가 다른 호스트로 라우팅하지 않도록 이 목록의 호스트로만 보낸다
-MODEL_PROVIDERS = os.environ.get("KEEPY_MODEL_PROVIDERS", "tencent").split(",")
+MODEL_PROVIDERS = os.environ.get("KEEPY_MODEL_PROVIDERS", "primeintellect,io-net").split(",")
 DECISION_MODEL = os.environ.get("KEEPY_DECISION_MODEL", "jev-latest")
 DB_PATH = os.environ.get("KEEPY_DB", "keepy.db")
 
